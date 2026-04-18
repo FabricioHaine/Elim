@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Bíblico Dinâmico - Elim Church</title>
+    <style>
+        :root {
+            --primary: #1a2a6c;
+            --secondary: #b21f1f;
+            --light: #f8f9fa;
+            --dark: #2d3436;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background-color: var(--light); color: var(--dark); padding: 20px; }
+
+        .quiz-container {
+            max-width: 700px;
+            margin: 50px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        header { text-align: center; margin-bottom: 30px; }
+        h1 { color: var(--primary); margin-bottom: 5px; }
+        .badge-info { font-size: 0.8rem; color: #666; font-style: italic; }
+
+        .btn-sair-topo {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            text-decoration: none;
+            color: #999;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .btn-sair-topo:hover { color: var(--secondary); }
+
+        .question { font-size: 1.2rem; font-weight: bold; margin-bottom: 20px; color: var(--dark); }
+
+        .options { display: flex; flex-direction: column; gap: 10px; }
+
+        .option-btn {
+            padding: 15px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: 0.3s;
+            text-align: left;
+            font-size: 1rem;
+        }
+
+        .option-btn:hover { border-color: var(--primary); background: #f0f4ff; }
+        .correct { background-color: #d4edda !important; border-color: #28a745 !important; color: #155724; }
+        .wrong { background-color: #f8d7da !important; border-color: #dc3545 !important; color: #721c24; }
+
+        #next-btn {
+            margin-top: 25px;
+            width: 100%;
+            padding: 15px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            display: none;
+            cursor: pointer;
+        }
+
+        .result-screen { text-align: center; display: none; }
+        .score { font-size: 3rem; color: var(--secondary); font-weight: bold; margin: 20px 0; }
+        
+        .btn-restart { 
+            display: inline-block; padding: 12px 25px; background: var(--primary); 
+            color: white; text-decoration: none; border-radius: 5px; font-weight: bold;
+            cursor: pointer; margin: 10px 5px; border: none;
+        }
+
+        .btn-home-final {
+            display: inline-block; padding: 12px 25px; background: transparent; 
+            color: var(--primary); text-decoration: none; border: 2px solid var(--primary);
+            border-radius: 5px; font-weight: bold; margin: 10px 5px; transition: 0.3s;
+        }
+
+        .btn-home-final:hover { background: var(--primary); color: white; }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+        <a href="index.html" class="btn-sair-topo">SAIR ✕</a>
+
+        <header>
+            <h1>Desafio Elim</h1>
+            <p class="badge-info">6 perguntas aleatórias sobre a Cronologia</p>
+        </header>
+
+        <div id="quiz">
+            <div class="question" id="question">Preparando perguntas...</div>
+            <div class="options" id="options"></div>
+            <button id="next-btn">Próxima Pergunta</button>
+        </div>
+
+        <div class="result-screen" id="result-screen">
+            <h2>Fim do Desafio!</h2>
+            <p>Sua pontuação nesta rodada:</p>
+            <div class="score" id="final-score">0 / 6</div>
+            
+            <button onclick="location.reload()" class="btn-restart">Tentar Novamente</button>
+            <a href="index.html" class="btn-home-final">Página Inicial</a>
+            <br>
+            <a href="estudos.html" style="display:inline-block; margin-top:20px; color: #666; text-decoration: none; font-size: 0.9rem;">← Voltar para Estudos</a>
+        </div>
+    </div>
+
+    <script>
+        const allQuestions = [
+            { q: "Segundo João 1:1, quem é o Verbo?", options: ["Jesus", "Pedro", "Anjo Gabriel", "Moisés"], answer: 0 },
+            { q: "Em qual dia da criação Deus criou o homem?", options: ["4º dia", "5º dia", "6º dia", "7º dia"], answer: 2 },
+            { q: "Qual foi o castigo para a serpente no Éden?", options: ["Perder as asas", "Rastejar e comer pó", "Falar línguas", "Viver no mar"], answer: 1 },
+            { q: "Quanto tempo durou a chuva do Dilúvio?", options: ["7 dias", "12 dias", "40 dias e 40 noites", "100 dias"], answer: 2 },
+            { q: "Qual era o nome da esposa de Abraão?", options: ["Raquel", "Sara", "Rebeca", "Lia"], answer: 1 },
+            { q: "José foi vendido por seus irmãos por quantas moedas de prata?", options: ["10", "20", "30", "50"], answer: 1 },
+            { q: "Qual o nome do mar que se abriu para o povo de Israel passar?", options: ["Mar Morto", "Mar da Galileia", "Mar Vermelho", "Mar Mediterrâneo"], answer: 2 },
+            { q: "Qual mandamento diz para 'Honrar pai e mãe'?", options: ["3º", "5º", "1º", "10º"], answer: 1 },
+            { q: "Quem subiu ao Monte Sinai para receber as Tábuas da Lei?", options: ["Arão", "Josué", "Moisés", "Calebe"], answer: 2 },
+            { q: "Quantas vezes o povo rodeou Jericó no último dia?", options: ["1 vez", "3 vezes", "7 vezes", "12 vezes"], answer: 2 },
+            { q: "Qual cidade teve suas muralhas derrubadas pelo som de trombetas?", options: ["Jerusalém", "Jericó", "Belém", "Sodoma"], answer: 1 },
+            { q: "Quem foi o companheiro de Josué que também entrou na terra prometida?", options: ["Moisés", "Calebe", "Gideão", "Enoque"], answer: 1 },
+            { q: "Qual praga transformou a água do Egito em sangue?", options: ["A primeira", "A quinta", "A última", "A terceira"], answer: 0 },
+            { q: "O que Noé soltou da arca para ver se a terra estava seca?", options: ["Uma águia", "Um pombo", "Um falcão", "Um pardal"], answer: 1 },
+            { q: "Qual o nome do filho da promessa de Abraão e Sara?", options: ["Ismael", "Isaque", "Esaú", "Jacó"], answer: 1 }
+        ];
+
+        let selectedQuestions = [];
+        let currentQuestion = 0;
+        let score = 0;
+
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const nextBtn = document.getElementById('next-btn');
+        const quizDiv = document.getElementById('quiz');
+        const resultScreen = document.getElementById('result-screen');
+        const finalScoreEl = document.getElementById('final-score');
+
+        function initQuiz() {
+            let shuffled = allQuestions.sort(() => 0.5 - Math.random());
+            selectedQuestions = shuffled.slice(0, 6);
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const qData = selectedQuestions[currentQuestion];
+            questionEl.innerText = qData.q;
+            optionsEl.innerHTML = "";
+            nextBtn.style.display = "none";
+
+            qData.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.innerText = opt;
+                btn.classList.add('option-btn');
+                btn.onclick = () => selectOption(index, btn);
+                optionsEl.appendChild(btn);
+            });
+        }
+
+        function selectOption(index, btn) {
+            const correct = selectedQuestions[currentQuestion].answer;
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.disabled = true);
+
+            if (index === correct) {
+                btn.classList.add('correct');
+                score++;
+            } else {
+                btn.classList.add('wrong');
+                allBtns[correct].classList.add('correct');
+            }
+            nextBtn.style.display = "block";
+        }
+
+        nextBtn.onclick = () => {
+            currentQuestion++;
+            if (currentQuestion < selectedQuestions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        };
+
+        function showResults() {
+            quizDiv.style.display = "none";
+            resultScreen.style.display = "block";
+            finalScoreEl.innerText = score + " / " + selectedQuestions.length;
+        }
+
+        initQuiz();
+    </script>
+</body>
+</html>
